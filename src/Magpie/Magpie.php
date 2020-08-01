@@ -8,19 +8,19 @@ class Magpie
      *
      * @var Magpie\Customer
      */
-    private $customer;
+    public $customer;
 
     /**
      *
      * @var Magpie\Charge
      */
-    private $charge;
+    public $charge;
 
     /**
      *
      * @var Magpie\Token
      */
-    private $token;
+    public $token;
 
     /**
      *
