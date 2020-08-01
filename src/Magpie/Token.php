@@ -2,11 +2,10 @@
 
 namespace Magpie;
 
-use GuzzleHttp\Client;
 use Rakit\Validation\Validator;
 use Magpie\Exceptions\InvalidArgumentException;
 
-class MagpieCustomer extends BaseClass
+class Token extends BaseClass
 {
     /** 
      * 
@@ -27,16 +26,20 @@ class MagpieCustomer extends BaseClass
     }
 
     /**
-     * Create Mapgie Customer
+     * Create Card Token
      * 
      * @param array $params
-     * @return array $customer
+     * @return array $token
      */
-    public function createCustomer($params)
+    public function create($params)
     {
         $validation = $this->validator->validate($params, [
-            'email' => 'required|email',
-            'description' => 'required',
+            'card' => 'required',
+            'card.name' => 'required',
+            'card.number' => 'required|digits:16',
+            'card.exp_month' => 'required|digits:2',
+            'card.exp_year' => 'required|digits:4',
+            'card.cvc' => 'required|digits_between:3,4',
         ]);
 
         if ($validation->fails()) {
@@ -48,37 +51,47 @@ class MagpieCustomer extends BaseClass
 
         $data = $validation->getValidData();
 
-        $response = $this->client->post('/customers', [
-            'json' =>  $data,
-            'headers' => [
-                'Accept' => 'application/json',
-                'Content-Type' => 'application/json',
-                'Authorization' => "Basic " . \base64_encode($this->secretKey)
-            ]
-        ]);
-
-        $body = $response->getBody();
-        return (array) json_decode($body, true);
-    }
-
-    /**
-     * Get customer object using customer id
-     * 
-     * @param string $id
-     */
-    public function getCustomer($id)
-    {
         try {
-            $response = $this->client->get("/customers/{$id}", [
+            $response = $this->client->post('/tokens', [
+                'json' =>  $data,
                 'headers' => [
                     'Accept' => 'application/json',
                     'Content-Type' => 'application/json',
-                    'Authorization' => "Basic " . \base64_encode($this->secretKey)
+                    'Authorization' => "Basic " . \base64_encode($this->publicKey)
                 ]
             ]);
-            $body = $response->getBody();
-            var_dump($response->getBody());
 
+            $body = $response->getBody();
+            return (array) json_decode($body, true);
+        } catch (\GuzzleHttp\Exception\ClientException $e) {
+            $response = $e->getResponse();
+            $body = $response->getBody();
+            $errorData = (array) json_decode($body, true);
+
+            $code = $errorData['error']['type'];
+            $message = $errorData['error']['message'];
+            throwErrorBasedOnMagpieErrorCode($code, $message);
+        }
+    }
+
+    /**
+     * Get card token
+     * 
+     * @param string $id
+     * @return array $token
+     */
+    public function get($id)
+    {
+        try {
+            $response = $this->client->get("/tokens/{$id}", [
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                    'Authorization' => "Basic " . \base64_encode($this->publicKey)
+                ]
+            ]);
+
+            $body = $response->getBody();
             return (array) json_decode($body, true);
         } catch (\GuzzleHttp\Exception\ClientException $e) {
             $response = $e->getResponse();
