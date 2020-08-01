@@ -2,21 +2,29 @@
 
 namespace Magpie;
 
+use GuzzleHttp\Client;
+
 abstract class BaseClass
 {
+    /**
+     * 
+     * @var GuzzleHttp\Client;
+     */
+    protected $client;
+
     /**
      * Magpie Merchant Public Key
      *
      * @var string
      */
-    private $publicKey;
+    protected $publicKey;
 
     /**
      * Magpie Merchant Secret Key
      *
      * @var string
      */
-    private $secretKey;
+    protected $secretKey;
 
     /**
      *
@@ -27,5 +35,10 @@ abstract class BaseClass
     {
         $this->publicKey = $publicKey;
         $this->secretKey = $secretKey;
+
+        $this->client = new Client([
+            'base_uri' => 'https://api.magpie.im',
+            'timeout'  => 10.0,
+        ]);
     }
 }

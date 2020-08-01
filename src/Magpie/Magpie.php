@@ -2,7 +2,7 @@
 
 namespace Magpie;
 
-class Magpie extends BaseClass
+class Magpie
 {
 
     /**
